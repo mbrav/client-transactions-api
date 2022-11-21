@@ -1,2 +1,1 @@
-# client-transactions-api
-A client transaction system API
+client_transactions_api/README.md

@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "client-transactions-api"
+version = "0.1.0"
+description = "An async client transaction system API"
+authors = ["mbrav <mbrav@protonmail.com>"]
+readme = "README.md"
+packages = [{include = "client_transactions_api"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+fastapi = "^0.87.0"
+fastapi-pagination = "^0.10.0"
+sqlalchemy = "^1.4.44"
+asyncpg = "^0.27.0"
+pydantic = {version = "^1.10.2", extras = ["dotenv"]}
+uvicorn = {version = "^0.20.0", extras = ["standard"]}
+python-jose = {version = "^3.3.0", extras = ["cryptography"]}
+passlib = {version = "^1.7.4", extras = ["argon2"]}
+python-multipart = "^0.0.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

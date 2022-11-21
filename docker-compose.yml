@@ -1,0 +1,21 @@
+version: '3.7'
+
+services:
+    db:
+        restart: always
+        image: postgres:14-alpine
+        env_file:
+            - ./.env
+        volumes:
+            - postgres_data:/var/lib/postgresql/data/
+        ports:
+            - 5432:5432
+        networks:
+            - web
+
+networks:
+    web:
+        driver: bridge
+
+volumes:
+    postgres_data:
