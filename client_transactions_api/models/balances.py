@@ -1,20 +1,17 @@
-from typing import Optional, Union
 
-from sqlalchemy import Column, Float, ForeignKey, Integer, select
+from fastapi import HTTPException, status
+from sqlalchemy import Column, Float, ForeignKey, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload, relationship
 
 from .base import BaseModel
-from .users import User
 
 
 class Balance(BaseModel):
     """Balance class"""
 
     user_id = Column(Integer, ForeignKey('users.id'), unique=True)
-    # user = relationship(User, back_populates='balance')
 
-    value = Column(Float, default=0)
+    value = Column(Float(precision=2), default=0.0)
 
     def __init__(self,
                  user_id: int,
@@ -22,35 +19,46 @@ class Balance(BaseModel):
         self.user_id = user_id
         self.value = value
 
-    # @classmethod
-    # async def by_user(
-    #     cls,
-    #     db_session: AsyncSession,
-    #     user_id: int,
-    #     days_ago: Optional[Union[int, None]] = 0,
-    #     limit: int = None,
-    #     offset: int = 0
-    # ):
-    #     """Get balances of a user newer than days_ago
+    @classmethod
+    async def get_or_create(
+        cls,
+        db_session: AsyncSession,
+        user_id: int
+    ) -> "Balance":
+        """Get or create new balance"""
 
-    #     Args:
-    #         db_session (AsyncSession): Current db session
-    #         user_id (int): User id
-    #         days_ago (Union[int, None], optional): Ignore events before n days ago.
-    #         Show all events if None. Defaults to 0.
-    #         limit (int, optional): limit result. Defaults to None.
-    #         offset (int, optional): offset result. Defaults to 0.
+        balance = await cls.get(db_session, raise_404=False, user_id=user_id)
 
-    #     Returns:
-    #         query result
-    #     """
+        # Create new balance if none
+        if not balance:
+            balance = await cls(user_id=user_id).save(db_session)
+        return balance
 
-    #     db_query = select(cls).join(
-    #         cls.event).options(
-    #         joinedload(cls.event)).filter(
-    #         cls.user_id == user_id)
+    @classmethod
+    async def transaction(
+        cls,
+        db_session: AsyncSession,
+        user_id: int,
+        sum: float = 0
+    ) -> "Balance":
+        """Make a transaction for a user
 
-    #     if limit:
-    #         db_query = db_query.limit(limit).offset(offset)
+        Args:
+            db_session (AsyncSession): Current db session
+            user_id (int): User id
+            sum (float): Transaction sum (negative or positive)
 
-    #     return await cls.get_list(db_session, db_query=db_query)
+        Returns:
+            result (Balance): Balance object
+        """
+
+        balance = await cls.get_or_create(db_session, user_id=user_id)
+
+        new_balance_value = float(f'{balance.value + sum:.2f}')
+        if new_balance_value < 0:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail='Not enough funds to carry out transaction')
+
+        balance.value = new_balance_value
+        return await balance.update(db_session)

@@ -9,6 +9,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.sql import text
+from sqlalchemy.sql.selectable import Select
 
 Base = declarative_base()
 
@@ -65,15 +66,15 @@ class BaseModel(Base):
     async def get(
         cls,
         db_session: AsyncSession,
-        db_query: select = None,
+        db_query: Select | None = None,
         raise_404: bool = True,
         **kwarg
-    ):
+    ) -> "BaseModel":
         """Get object based on query or id identified by kwarg
 
         Args:
             db_session (AsyncSession): Current db session
-            query (select, optional): SQLAlchemy 2.0 select query. Defaults to None.
+            query (Select, optional): SQLAlchemy 2.0 select query. Defaults to None.
             raise_404 (bool, optional): Raise 404 if not found. Defaults to True.
             kwarg (optional): Object attribute and value by which
                 to get object. Defaults to None.
@@ -141,7 +142,7 @@ class BaseModel(Base):
     async def _get_objects(
         cls,
         db_session: AsyncSession,
-        db_query: select = None,
+        db_query: Select | None = None,
         sort_by: str | None = None,
         desc: bool = True,
         paginated: bool = False,
@@ -151,7 +152,7 @@ class BaseModel(Base):
 
         Args:
             db_session (AsyncSession): Current db session
-            db_query (select, optional): SQLAlchemy 2.0 select query. Defaults to None.
+            db_query (Select, optional): SQLAlchemy 2.0 select query. Defaults to None.
             sort_by (str, optional): column by which to sort results.
             desc (bool, optional): Sort by descending. Defaults to True.
 
@@ -194,7 +195,7 @@ class BaseModel(Base):
         db_session: AsyncSession,
         one: bool = False,
         **kwargs
-    ) -> List:
+    ) -> List["BaseModel"] | "BaseModel":
         """Get list of objects
 
         Args:
@@ -204,7 +205,7 @@ class BaseModel(Base):
                 Defaults to False.
 
         Returns:
-            List: As objects list or object (None or object)
+            List[BaseModel]: As objects list of objects or object
         """
         result = await cls._get_objects(db_session, paginated=False, **kwargs)
         if one:

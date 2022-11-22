@@ -13,7 +13,7 @@ class SettingsBase(BaseSettings):
 
     """
 
-    TESTING: bool = Field(env='TESTING', default=True)
+    TESTING: bool = Field(env='TESTING', default=False)
     DEBUG: bool = Field(env='DEBUG', default=False)
     LOGGING: bool = Field(env='LOGGING', default=False)
     LOG_PATH: str = Field(env='LOG_PATH', default='logs/app.log')

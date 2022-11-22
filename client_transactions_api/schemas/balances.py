@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 class BalanceIn(BaseModel):
     user_id: int = Field(example=1, description="PK id user's id")
-    value: float = Field(example=65.09, description="User's balance in currency")
+    value: float = Field(example=420.69, description="User's balance in currency")
 
     class Config:
         orm_mode = True

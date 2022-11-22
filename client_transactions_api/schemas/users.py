@@ -19,17 +19,17 @@ class UserLogin(UserBase):
 
 
 class UserUpdate(UserLogin):
-    password: Optional[str] = Field(
+    password: str = Field(
         default=None,
         example='myNewPa$$word',
         description='A new valid password')
 
 
 class UserCreate(UserUpdate):
-    is_admin: Optional[bool] = Field(
+    is_admin: bool = Field(
         default=False,
         description='Specify if a user is an admin')
-    is_active: Optional[bool] = Field(
+    is_active: bool = Field(
         default=True,
         description='Specify if a user is active')
 
