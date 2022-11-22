@@ -12,7 +12,7 @@ from client_transactions_api.config import settings
 
 context = CryptContext(schemes=['argon2'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl=f'{settings.API_V1_STR}/auth/token')
+    tokenUrl=f'{settings.API_PATH}/auth/token')
 
 
 class AuthService:
@@ -22,8 +22,7 @@ class AuthService:
             self,
             secret: str,
             algorithm: str = 'HS256',
-            expire: int = 30,
-            token_url: str = 'token'):
+            expire: int = 30):
         """Auth service initialization"""
 
         self.SECRET_KEY = secret
@@ -84,12 +83,12 @@ class AuthService:
         to_encode.update({'exp': expire})
         encoded_jwt = jwt.encode(
             to_encode,
-            self.SECRET_KEY.get_secret_value(),
+            self.SECRET_KEY,
             algorithm=self.CRYPT_ALGORITHM)
         return encoded_jwt
 
 
 auth_service = AuthService(
-    secret=settings.SECRET_KEY,
+    secret=settings.SECRET_KEY.get_secret_value(),
     algorithm=settings.CRYPT_ALGORITHM,
     expire=settings.TOKEN_EXPIRE_MINUTES)

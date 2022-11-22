@@ -36,7 +36,7 @@ async def get_auth_user(
 
     try:
         payload = jwt.decode(
-            token, auth_service.SECRET_KEY.get_secret_value(),
+            token, auth_service.SECRET_KEY,
             algorithms=[auth_service.CRYPT_ALGORITHM])
         username: str = payload.get('sub')
         if username is None:

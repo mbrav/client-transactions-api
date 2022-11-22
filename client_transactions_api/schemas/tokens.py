@@ -11,4 +11,4 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     """Helper Class for FastAPI's deps"""
-    username: Optional[str] = None
+    username: str

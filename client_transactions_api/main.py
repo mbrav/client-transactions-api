@@ -3,6 +3,7 @@ import os
 
 from fastapi import FastAPI
 
+from client_transactions_api import __version__ as version
 from client_transactions_api import api, db, middleware, models
 from client_transactions_api.config import settings
 from client_transactions_api.utils import create_superuser
@@ -26,12 +27,12 @@ app = FastAPI(
         'url': 'https://www.gnu.org/licenses/gpl-3.0.en.html',
     },
     docs_url='/docs',
-    version=settings.VERSION,
+    version=version,
     redoc_url='/redocs',
 )
 
 
-app.include_router(api.api_router, prefix=settings.API_V1_STR)
+app.include_router(api.api_router, prefix=settings.API_PATH)
 
 app.add_middleware(middleware.ProcessTimeMiddleware)
 

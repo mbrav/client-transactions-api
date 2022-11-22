@@ -13,19 +13,14 @@ class SettingsBase(BaseSettings):
 
     """
 
-    VERSION: str = Field(env='VERSION', default='0.0.1')
-
     TESTING: bool = Field(env='TESTING', default=True)
     DEBUG: bool = Field(env='DEBUG', default=False)
     LOGGING: bool = Field(env='LOGGING', default=False)
     LOG_PATH: str = Field(env='LOG_PATH', default='logs/app.log')
 
     SECRET_KEY: SecretStr = Field(env='SECRET_KEY', default='pl3seCh@nGeM3!')
-    API_V1_STR: str = Field(env='API_V1_STR', default='/api')
+    API_PATH: str = Field(env='API_PATH', default='/api')
     TIMEZONE: timezone = Field(timezone.utc)
-
-    SSL_PUBLIC_PATH: Optional[FilePath] = Field(
-        env='SSL_PUBLIC_PATH', default=None)
 
     class Config:
         env_file = '.env'

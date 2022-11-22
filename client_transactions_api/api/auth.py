@@ -7,6 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from client_transactions_api import db, models, schemas
 from client_transactions_api.services import auth_service
 
+from .deps import PermissionUser
+
 router = APIRouter()
 
 
@@ -70,27 +72,26 @@ async def register_user(
     return await new_object.save(db_session)
 
 
-@router.post(
-    path='/password',
-    response_model=schemas.UserBase,
-    status_code=status.HTTP_200_OK)
-async def change_user_password(
-    schema: schemas.UserLogin,
-    db_session: AsyncSession = Depends(db.get_database)
-) -> models.User:
-    """Change user password"""
+# @router.post(
+#     path='/password',
+#     response_model=schemas.UserBase,
+#     status_code=status.HTTP_200_OK)
+# async def change_user_password(
+#     schema: schemas.UserLogin,
+#     user: models.User = Depends(PermissionUser),
+#     db_session: AsyncSession = Depends(db.get_database)
+# ) -> models.User:
+#     """Change user password"""
 
-    user = await models.User.get(
-        db_session, username=schema.username, raise_404=False)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='User does not exist',
-            headers={'WWW-Authenticate': 'Bearer'})
+#     if schema.username != user.username:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="You do not have permissions to change this user's password",
+#             headers={'WWW-Authenticate': 'Bearer'})
 
-    hashed_password = auth_service.hash_password(schema.password)
-    update_object = models.User(
-        username=schema.username,
-        password=hashed_password)
+#     hashed_password = auth_service.hash_password(schema.password)
+#     update_object = models.User(
+#         username=schema.username,
+#         password=hashed_password)
 
-    return await update_object.update(db_session, **update_object.__dict__)
+#     return await update_object.update(db_session, **update_object.__dict__)
