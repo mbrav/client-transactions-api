@@ -2,7 +2,7 @@ import random
 import string
 
 from . import db, models, schemas
-from .services import auth_service
+from .services.auth import auth_service
 
 
 async def create_superuser(

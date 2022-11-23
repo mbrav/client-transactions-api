@@ -42,7 +42,7 @@ if settings.LOGGING:
         logger_level = logging.DEBUG
 
     os.makedirs(os.path.dirname(settings.LOG_PATH), exist_ok=True)
-
+    test = os.path.dirname(settings.LOG_PATH)
     formatter = logging.Formatter(
         '%(levelname)s:%(name)s %(asctime)s: %(message)s')
     handler = logging.handlers.RotatingFileHandler(
@@ -64,8 +64,8 @@ if settings.LOGGING:
 async def startup_database():
     logger.info('FastAPI starting up...')
     async with db.engine.begin() as conn:
+        # DROP ALL TABLES when testing!
         if settings.TESTING:
-            # DROP ALL TABLES when testing!
             await conn.run_sync(models.Base.metadata.drop_all)
         await conn.run_sync(models.Base.metadata.create_all)
     await db.engine.dispose()

@@ -64,8 +64,9 @@ class AuthServiceMixin(SettingsBase):
 
     CRYPT_ALGORITHM: str = Field(
         env='CRYPT_ALGORITHM', default='HS256')
+    # Set tokens to one week expiration 
     TOKEN_EXPIRE_MINUTES: int = Field(
-        env='TOKEN_EXPIRE_MINUTES', default=60*24)
+        env='TOKEN_EXPIRE_MINUTES', default=60*24*7)
 
 
 class Settings(

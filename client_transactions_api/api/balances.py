@@ -1,18 +1,22 @@
-from typing import Optional
+import logging
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from client_transactions_api import db, models, schemas
+from client_transactions_api.services.offline import (OfflineException,
+                                                      OfflineTransaction,
+                                                      OfflineTransactions)
 
 from .deps import PermissionUser
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post(
     path='',
-    response_model=schemas.BalanceOut,
+    response_model=schemas.BalanceOut | schemas.OfflineBalanceOut,
     status_code=status.HTTP_201_CREATED)
 async def balance_post(
     schema: schemas.BalanceIn,
@@ -20,6 +24,14 @@ async def balance_post(
     db_session: AsyncSession = Depends(db.get_database)
 ) -> models.Balance:
     """Add new transaction to balance with POST request"""
+
+    if type(user) is OfflineException:
+        logger.info('OfflineException presented')
+
+        detail = schemas.OfflineBalanceOut(**schema.dict()).dict()
+        raise HTTPException(
+            status_code=status.HTTP_201_CREATED,
+            detail=detail)
 
     return await models.Balance.transaction(db_session, user_id=user.id, sum=schema.value)
 

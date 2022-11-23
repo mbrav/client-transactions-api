@@ -5,9 +5,8 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from client_transactions_api import db, models, schemas
-from client_transactions_api.services import auth_service
-
-from .deps import PermissionUser
+from client_transactions_api.services.auth import auth_service
+from client_transactions_api.services.offline import OfflineTransactions
 
 router = APIRouter()
 
@@ -40,6 +39,9 @@ async def get_access_token(
         data=data,
         expires_delta=access_token_expires)
 
+    # Store token for offline transactions
+    OfflineTransactions.add_token(user.username, access_token)
+
     response = schemas.Token(
         access_token=access_token,
         token_type='bearer')
@@ -71,6 +73,8 @@ async def register_user(
 
     return await new_object.save(db_session)
 
+
+# from .deps import PermissionUser
 
 # @router.post(
 #     path='/password',
