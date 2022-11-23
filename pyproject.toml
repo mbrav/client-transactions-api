@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "client-transactions-api"
-version = "0.1.4"
+version = "0.2.0"
 description = "A fault tolerant, asynchronous funds transaction API"
 authors = ["mbrav <mbrav@protonmail.com>"]
 readme = "README.md"
