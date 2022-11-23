@@ -43,7 +43,7 @@ async def get_auth_user(
         payload = jwt.decode(
             token, auth_service.SECRET_KEY,
             algorithms=[auth_service.CRYPT_ALGORITHM])
-        username: str = payload.get('sub')
+        username = payload.get('sub')
         if username is None:
             raise credentials_exception
         token_data = schemas.TokenData(username=username)

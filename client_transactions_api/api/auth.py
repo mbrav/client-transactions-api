@@ -39,8 +39,11 @@ async def get_access_token(
         data=data,
         expires_delta=access_token_expires)
 
-    # Store token for offline transactions
-    OfflineTransactions.add_token(user.username, access_token)
+    # Store user auth data for offline transactions
+    OfflineTransactions.add_auth_data(
+        user_id=user.id,
+        username=user.username,
+        token=access_token)
 
     response = schemas.Token(
         access_token=access_token,
