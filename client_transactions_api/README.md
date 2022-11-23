@@ -8,9 +8,9 @@ A fault tolerant, asynchronous funds transaction API
 
 ## Summary
 
-This is a funds transaction API written using the FastAPI framework and uses Postres DB. It manages user authorizations and keeps track of their funds and balances is a simple SQL table. Users can view their balances (`GET /api/balances/my`) and post transactions (`POST /api/balances`) to update their balances.
+This is a funds transaction API written using the FastAPI framework and uses Postgres DB. It manages user authorizations and keeps track of their funds and balances in a simple SQL table. Users can view their balances (`GET /api/balances/my`) and post transactions (`POST /api/balances`) to update their balances.
 
-The main feature of this API is that it can still carry out transactions once the DB goes down. While the DB is offline down, the user can still carry out transactions, while also being declined, in case there not enough funds.
+The main feature of this API is that it can still carry out transactions once the DB goes down. While the DB is offline, the user can still carry out transactions, while also being declined, in case there are not enough funds on their balance.
 
 Along with these features, the service also uses the following stack.
 
