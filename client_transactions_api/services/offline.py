@@ -1,8 +1,6 @@
+import asyncio
 import logging
 from dataclasses import dataclass, field
-from typing import Optional
-
-from client_transactions_api.schemas import BalanceOut
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +21,9 @@ class InsufficientFundsException(Exception):
     """Offline Exception for insufficient funds"""
 
     def __init__(self, balance: float, sum: float):
-        self.message = f'{balance} + {sum} is less than 0!'
+        self.balance = balance
+        self.sum = sum
+        self.message = f'Not enough funds ({balance:.2f}) for a {sum:.2f} transaction!'
         logger.warning(self.message)
         super().__init__(self.message)
 
@@ -53,9 +53,14 @@ class OfflineTransactions:
     user_ids: dict[str, int] = {}
     user_names: dict[int, str] = {}
     user_data: dict[str, UserData] = {}
+    users_offline: list[str] = []
 
     def __init__(self):
         raise RuntimeError('Call OfflineTransactions.instance() instead')
+
+    def __len__(self):
+        """Return length of users that need to be processed once db is online"""
+        return len(self.users_offline)
 
     @classmethod
     def instance(cls):
@@ -127,4 +132,29 @@ class OfflineTransactions:
             if not valid:
                 return InsufficientFundsException(balance, sum)
             self.user_data[username].balance = balance + sum
+            if username not in self.users_offline:
+                self.users_offline.append(username)
             return self.user_data[username].balance
+
+
+class OfflineTransactionPool:
+    """Offline Transaction Pool class
+
+    Checks for available tasks to process once DB comes back online
+    """
+
+    def __init__(self, interval: int = 5):
+        """Set pool interval in seconds"""
+        self.interval = interval
+
+    async def run(self):
+        """Run executor and check for tasks with interval"""
+        while True:
+            await asyncio.sleep(self.interval)
+            offline_transactions = OfflineTransactions.instance()
+
+            if len(offline_transactions) > 0:
+                logger.warning(
+                    f'There are {len(offline_transactions)} offline transactions to be processed')
+            else:
+                logger.debug('No offline transactions at this time')

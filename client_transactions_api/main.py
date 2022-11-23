@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 
@@ -6,6 +7,7 @@ from fastapi import FastAPI
 from client_transactions_api import __version__ as version
 from client_transactions_api import api, db, middleware, models
 from client_transactions_api.config import settings
+from client_transactions_api.services.offline import OfflineTransactionPool
 from client_transactions_api.utils import create_superuser
 
 FILE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -73,6 +75,13 @@ async def startup_database():
         await create_superuser(
             username=settings.FIRST_SUPERUSER,
             password=settings.FIRST_SUPERUSER_PASSWORD.get_secret_value())
+
+
+@app.on_event('startup')
+async def startup_offline_pool():
+    # Run Offline transaction checker
+    pool = OfflineTransactionPool(10)
+    asyncio.create_task(pool.run())
 
 
 @app.on_event('shutdown')
