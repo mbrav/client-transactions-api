@@ -2,6 +2,10 @@ import asyncio
 import logging
 from dataclasses import dataclass, field
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from client_transactions_api import db, models
+
 logger = logging.getLogger(__name__)
 
 
@@ -49,7 +53,9 @@ class UserData:
 class OfflineTransactions:
     """Offline Database Singleton class"""
 
+    # For instantiation as a Singleton Pattern Class
     __instance = None
+
     user_ids: dict[str, int] = {}
     user_names: dict[int, str] = {}
     user_data: dict[str, UserData] = {}
@@ -74,13 +80,43 @@ class OfflineTransactions:
     def add_auth_data(cls, user_id: int, username: str, token: str) -> None:
         """Add valid auth user data to dict"""
         self = cls.instance()
+
+        # Add user's auth data to offline storage
         if username not in self.user_data.keys():
             self.user_data[username] = UserData(token=token)
             logger.info(f'Added user {username} (#{user_id}) to offline database storage')
         else:
             self.user_data[username].token = token
+
+        # Set user id and username lookup dicts
         self.user_ids[username] = user_id
         self.user_names[user_id] = username
+
+    @classmethod
+    async def gather(cls, db_session: AsyncSession, user_id: int) -> None:
+        """Gather offline transactions for a user if back online"""
+
+        self = cls.instance()
+        username = self.user_names[user_id]
+
+        # If user is not in list of user to process offline, do nothing
+        if username not in self.users_offline:
+            return
+
+        offline_user_data = self.user_data[username]
+        balance = await models.Balance.get(db_session, user_id=user_id)
+
+        # If user does not have a balance, do nothing
+        # Or if offline balance is equal to that in DB
+        if balance is None or balance.value == offline_user_data.balance:
+            return
+
+        # Calculate difference between DB and balance stored offline
+        delta_sum = offline_user_data.balance - balance.value
+        await models.Balance.transaction(db_session, user_id=user_id, sum=delta_sum)
+
+        # User's offline transactions done
+        self.users_offline.remove(username)
 
     @classmethod
     def add_balance(cls, user_id: int, balance: float) -> None:
@@ -125,13 +161,23 @@ class OfflineTransactions:
             return OfflineUserUnavailable()
         else:
             username = self.user_names[user_id]
+
+            # If user is not present in user_data dict
+            # They have not authenticated during api's runtime
             if username not in self.user_data.keys():
                 return OfflineUserUnavailable()
+
+            # Check if there are enough funds to carry out the transaction
             balance = self.user_data[username].balance
             valid = self._check_transaction(balance, sum)
             if not valid:
                 return InsufficientFundsException(balance, sum)
+
+            # Update user's new balance based on valid sum
             self.user_data[username].balance = balance + sum
+
+            # Add username to list of offline users to process
+            # Once DB comes back online
             if username not in self.users_offline:
                 self.users_offline.append(username)
             return self.user_data[username].balance

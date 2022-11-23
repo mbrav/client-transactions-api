@@ -16,7 +16,7 @@ class Balance(BaseModel):
 
     user_id = Column(Integer, ForeignKey('users.id'), unique=True)
 
-    value = Column(Float(precision=2), default=0.0)
+    value = Column(Float, default=0.0)
 
     def __init__(self,
                  user_id: int,
@@ -67,11 +67,11 @@ class Balance(BaseModel):
             logger.info('OfflineException return')
             return balance
 
-        new_balance_value = float(f'{balance.value + sum:.2f}')
+        new_balance_value = balance.value + sum
         if new_balance_value < 0:
             raise HTTPException(
                 status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail='Not enough funds to carry out transaction')
+                detail=f'Not enough funds ({balance.value:.2f}) for a {sum:.2f} transaction!')
 
         balance.value = new_balance_value
         return await balance.update(db_session)

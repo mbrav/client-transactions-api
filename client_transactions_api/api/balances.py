@@ -52,9 +52,14 @@ async def balance_post(
             status_code=status.HTTP_201_CREATED,
             detail=offline_msg)
 
+    # Check if there are any Offline transactions to run
+    # Before running online transactions
+    offline = OfflineTransactions.instance()
+    await offline.gather(db_session, user.id)
+
     # Add User's balance to Offline Transactions pool
     balance = await models.Balance.get_or_create(db_session, user_id=user.id)
-    OfflineTransactions.instance().add_balance(user.id, balance.value)
+    offline.add_balance(user.id, balance.value)
 
     return await models.Balance.transaction(db_session, user_id=user.id, sum=schema.value)
 
