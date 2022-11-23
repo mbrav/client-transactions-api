@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "client-transactions-api"
 version = "0.1.4"
-description = "An async client transaction system API"
+description = "A fault tolerant, asynchronous funds transaction API"
 authors = ["mbrav <mbrav@protonmail.com>"]
 readme = "README.md"
 packages = [{include = "client_transactions_api"}]

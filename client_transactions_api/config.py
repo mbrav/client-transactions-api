@@ -64,14 +64,22 @@ class AuthServiceMixin(SettingsBase):
 
     CRYPT_ALGORITHM: str = Field(
         env='CRYPT_ALGORITHM', default='HS256')
-    # Set tokens to one week expiration 
+    # Set tokens to one week expiration
     TOKEN_EXPIRE_MINUTES: int = Field(
         env='TOKEN_EXPIRE_MINUTES', default=60*24*7)
 
 
+class OfflinePoolService(SettingsBase):
+    """Offline transaction checker Settings Mixin"""
+
+    POOL_INTERVAL: int = Field(
+        env='POOL_INTERVAL', default=5)
+
+
 class Settings(
         PostgresMixin,
-        AuthServiceMixin
+        AuthServiceMixin,
+        OfflinePoolService
 ):
     """Combined Settings with previous settings as mixins"""
     pass

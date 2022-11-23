@@ -35,5 +35,7 @@ class UserCreate(UserUpdate):
 
 
 class User(UserCreate):
-    """Rename UserCreate as User for convenience purposes"""
-    pass
+    """Complete user model"""
+    id: str = Field(
+        example=2,
+        description='Id of the user')

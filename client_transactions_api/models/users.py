@@ -13,10 +13,6 @@ class User(BaseModel):
     is_active = Column(Boolean(), default=True)
     is_admin = Column(Boolean(), default=False)
 
-    # IETF language tag
-    # https://en.wikipedia.org/wiki/IETF_language_tag
-    language_code = Column(String(8), default='en')
-
     def __init__(self,
                  username: str,
                  password: str | None = None,

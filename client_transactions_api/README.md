@@ -5,4 +5,4 @@
 
 # client-transactions-api
 
-An async client transaction system API
+A fault tolerant, asynchronous funds transaction API

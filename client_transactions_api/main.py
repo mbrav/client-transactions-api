@@ -17,7 +17,7 @@ with open(f'{FILE_DIR}/README.md') as f:
 logger = logging.getLogger()
 
 app = FastAPI(
-    title='An async client transaction system API',
+    title='A fault tolerant, asynchronous funds transaction API',
     description=description,
     contact={
         'name': 'mbrav',
@@ -79,8 +79,8 @@ async def startup_database():
 
 @app.on_event('startup')
 async def startup_offline_pool():
-    # Run Offline transaction checker
-    pool = OfflineTransactionPool(10)
+    # Run pffline transaction checker pool
+    pool = OfflineTransactionPool(settings.POOL_INTERVAL)
     asyncio.create_task(pool.run())
 
 
