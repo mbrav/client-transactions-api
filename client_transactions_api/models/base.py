@@ -13,8 +13,6 @@ from sqlalchemy.ext.declarative import declarative_base, declared_attr
 from sqlalchemy.sql import text
 from sqlalchemy.sql.selectable import Select
 
-from client_transactions_api.services.offline import OfflineException
-
 Base = declarative_base()
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ class BaseModel(Base):
     def __tablename__(self) -> str:
         return to_snake_case(self.__name__) + 's'
 
-    async def save(self, db_session: AsyncSession) -> "BaseModel | OfflineException":
+    async def save(self, db_session: AsyncSession) -> "BaseModel":
         """Save object
 
         Args:
@@ -66,9 +64,6 @@ class BaseModel(Base):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=repr(ex))
-        except ConnectionRefusedError:
-            logger.warning('ConnectionRefusedError raised')
-            return OfflineException()
 
     @classmethod
     async def get(
@@ -77,7 +72,7 @@ class BaseModel(Base):
         db_query: Select | None = None,
         raise_404: bool = True,
         **kwarg
-    ) -> "BaseModel | OfflineException":
+    ) -> "BaseModel":
         """Get object based on query or id identified by kwarg
 
         Args:
@@ -119,15 +114,12 @@ class BaseModel(Base):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=repr(ex))
-        except ConnectionRefusedError:
-            logger.warning('ConnectionRefusedError raised')
-            return OfflineException()
 
     async def update(
         self,
         db_session: AsyncSession,
         **kwargs
-    ) -> "BaseModel | OfflineException":
+    ) -> "BaseModel":
         """Update model object with provided attributes"""
 
         for k, v in kwargs.items():
@@ -140,11 +132,8 @@ class BaseModel(Base):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=repr(ex))
-        except ConnectionRefusedError:
-            logger.warning('ConnectionRefusedError raised')
-            return OfflineException()
 
-    async def delete(self, db_session: AsyncSession) -> None | OfflineException:
+    async def delete(self, db_session: AsyncSession) -> None:
         """Delete model object from database"""
 
         try:
@@ -154,9 +143,6 @@ class BaseModel(Base):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=repr(ex))
-        except ConnectionRefusedError:
-            logger.warning('ConnectionRefusedError raised')
-            return OfflineException()
 
     @classmethod
     async def _get_objects(
@@ -167,7 +153,7 @@ class BaseModel(Base):
         desc: bool = True,
         paginated: bool = False,
         **kwargs
-    ) -> "List[BaseModel | None] | None | AbstractPage | OfflineException":
+    ) -> "List[BaseModel | None] | None | AbstractPage":
         """Get list of objects of paginated
 
         Args:
@@ -208,9 +194,6 @@ class BaseModel(Base):
             raise HTTPException(
                 status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                 detail=repr(ex))
-        except ConnectionRefusedError:
-            logger.warning('ConnectionRefusedError raised')
-            return OfflineException()
 
     @classmethod
     async def get_list(
@@ -218,7 +201,7 @@ class BaseModel(Base):
         db_session: AsyncSession,
         one: bool = False,
         **kwargs
-    ) -> List["BaseModel"] | "BaseModel" | OfflineException:
+    ) -> List["BaseModel"] | "BaseModel":
         """Get list of objects
 
         Args:
@@ -233,10 +216,6 @@ class BaseModel(Base):
 
         result = await cls._get_objects(db_session, paginated=False, **kwargs)
 
-        if type(result) is OfflineException:
-            logger.info('OfflineException return')
-            return result
-
         if one:
             return result.scalar()
         return result.scalars().all()
@@ -246,7 +225,7 @@ class BaseModel(Base):
         cls,
         db_session: AsyncSession,
         **kwargs
-    ) -> "List[BaseModel | None] | None | AbstractPage | OfflineException":
+    ) -> "List[BaseModel | None] | None | AbstractPage":
         """Get paginated list of objects"""
 
         return await cls._get_objects(db_session, paginated=True, **kwargs)
@@ -256,21 +235,15 @@ class BaseModel(Base):
         cls,
         db_session: AsyncSession,
         *args
-    ) -> Result | None | OfflineException:
+    ) -> Result | None:
         """Get list of specific model fields as rows"""
-        try:
-            return await db_session.execute(select(*args))
-        except ConnectionRefusedError:
-            logger.warning('ConnectionRefusedError raised')
-            return OfflineException()
+
+        return await db_session.execute(select(*args))
 
     @classmethod
-    async def count(cls, db_session: AsyncSession) -> int | OfflineException:
+    async def count(cls, db_session: AsyncSession) -> int:
         """Count number of objects"""
+
         db_query = select([func.count()]).select_from(cls)
-        try:
-            result = await db_session.execute(db_query)
-            return result.scalar()
-        except ConnectionRefusedError:
-            logger.warning('ConnectionRefusedError raised')
-            return OfflineException()
+        result = await db_session.execute(db_query)
+        return result.scalar()

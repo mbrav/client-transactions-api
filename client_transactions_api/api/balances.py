@@ -4,9 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from client_transactions_api import db, models, schemas
-from client_transactions_api.services.offline import (
-    InsufficientFundsException, OfflineException, OfflineTransactions,
-    OfflineUserUnavailable)
+from client_transactions_api.services.offline import OfflineTransactions
 
 from .deps import PermissionUser
 
@@ -24,33 +22,6 @@ async def balance_post(
     db_session: AsyncSession = Depends(db.get_database)
 ) -> models.Balance:
     """Add new transaction to balance with POST request"""
-
-    if type(user) is OfflineException:
-        user_id = schema.user_id
-        logger.info('OfflineException presented')
-
-        # Carry out transaction
-        offline_balance = OfflineTransactions.instance().transaction(user_id, schema.value)
-        if type(offline_balance) == OfflineUserUnavailable:
-            raise HTTPException(
-                status_code=status.HTTP_206_PARTIAL_CONTENT,
-                detail='Service down. User not available for offline processing')
-        if type(offline_balance) == InsufficientFundsException:
-            offline_msg = schemas.OfflineBalanceOut(
-                user_id=schema.user_id,
-                value=offline_balance.sum,
-                balance=offline_balance.balance,
-                message=offline_balance.message
-            ).dict()
-            raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail=offline_msg)
-
-        offline_msg = schemas.OfflineBalanceOut(
-            **schema.dict(), balance=offline_balance).dict()
-        raise HTTPException(
-            status_code=status.HTTP_201_CREATED,
-            detail=offline_msg)
 
     # Check if there are any Offline transactions to run
     # Before running online transactions
@@ -73,11 +44,6 @@ async def balance_get(
     db_session: AsyncSession = Depends(db.get_database),
 ) -> models.Balance:
     """Retrieve user's Balance with GET request"""
-
-    if type(user) is OfflineException:
-        raise HTTPException(
-            status_code=status.HTTP_206_PARTIAL_CONTENT,
-            detail='Service down. User not available for offline processing')
 
     balance = await models.Balance.get_or_create(db_session, user_id=user.id)
     OfflineTransactions.instance().add_balance(user.id, balance.value)

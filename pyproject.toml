@@ -8,7 +8,7 @@ packages = [{include = "client_transactions_api"}]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.87.0"
+fastapi = "^0.88.0"
 fastapi-pagination = "^0.10.0"
 sqlalchemy = "^1.4.44"
 asyncpg = "^0.27.0"

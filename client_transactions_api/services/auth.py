@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from client_transactions_api import db, models
 from client_transactions_api.config import settings
-from client_transactions_api.services.offline import OfflineException
 
 context = CryptContext(schemes=['argon2'], deprecated='auto')
 oauth2_scheme = OAuth2PasswordBearer(
@@ -40,7 +39,7 @@ class AuthService:
     async def get_user(
         username: str,
         db_session: AsyncSession = Depends(db.get_database),
-    ) -> models.User | OfflineException:
+    ) -> models.User:
         """Get user from database"""
 
         return await models.User.get(db_session, username=username)
@@ -62,12 +61,9 @@ class AuthService:
         username: str,
         password: str,
         db_session: AsyncSession = Depends(db.get_database)
-    ) -> models.User | None | OfflineException:
+    ) -> models.User | None:
         """Authenticate user"""
         user = await self.get_user(username=username, db_session=db_session)
-        if type(user) is OfflineException:
-            logger.info('OfflineException return')
-            return user
         if not user:
             return None
         if not self.verify_password(password, user.hashed_password):

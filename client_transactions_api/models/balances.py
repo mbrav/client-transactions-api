@@ -4,8 +4,6 @@ from fastapi import HTTPException, status
 from sqlalchemy import Column, Float, ForeignKey, Integer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from client_transactions_api.services.offline import OfflineException
-
 from .base import BaseModel
 
 logger = logging.getLogger(__name__)
@@ -29,14 +27,10 @@ class Balance(BaseModel):
         cls,
         db_session: AsyncSession,
         user_id: int
-    ) -> "Balance | OfflineException":
+    ) -> "Balance":
         """Get or create new balance"""
 
         balance = await cls.get(db_session, raise_404=False, user_id=user_id)
-
-        if type(balance) is OfflineException:
-            logger.info('OfflineException return')
-            return balance
 
         # Create new balance if none
         if not balance:
@@ -49,7 +43,7 @@ class Balance(BaseModel):
         db_session: AsyncSession,
         user_id: int,
         sum: float = 0
-    ) -> "Balance | OfflineException":
+    ) -> "Balance":
         """Make a transaction for a user
 
         Args:
@@ -62,10 +56,6 @@ class Balance(BaseModel):
         """
 
         balance = await cls.get_or_create(db_session, user_id=user_id)
-
-        if type(balance) is OfflineException:
-            logger.info('OfflineException return')
-            return balance
 
         new_balance_value = balance.value + sum
         if new_balance_value < 0:

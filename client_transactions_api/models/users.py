@@ -1,4 +1,4 @@
-from sqlalchemy import BigInteger, Boolean, Column, String
+from sqlalchemy import Boolean, Column, String
 from sqlalchemy.orm import relationship
 
 from .base import BaseModel
